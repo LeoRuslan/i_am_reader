@@ -1,3 +1,5 @@
 venv/
 reader/
 __pycache__
+
+data/
