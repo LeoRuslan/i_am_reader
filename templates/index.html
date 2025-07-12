@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I am reader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script>
+        console.log('JavaScript loaded');
+        
+        document.getElementById('file-input').addEventListener('change', function() {
+            console.log('File selected:', this.files[0].name);
+            
+            if (this.files.length > 0) {
+                // Змінюємо текст кнопки на час завантаження
+                const button = document.querySelector('.upload-button');
+                const originalText = button.textContent;
+                button.textContent = 'Завантаження...';
+                button.disabled = true;
+                
+                // Відправляємо форму
+                console.log('Submitting form...');
+                this.form.submit();
+                
+                // Після відправки форми
+                this.form.addEventListener('submit', function() {
+                    console.log('Form submitted');
+                    // Відкриваємо нове вікно для результату
+                    const resultWindow = window.open('', '_blank');
+                    resultWindow.document.write('<h2>Очікуйте результат...</h2>');
+                    
+                    // Закриваємо вікно через 2 секунди
+                    setTimeout(() => {
+                        resultWindow.close();
+                        button.textContent = originalText;
+                        button.disabled = false;
+                        console.log('Form submission completed');
+                    }, 2000);
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div id="message"></div>
+        <input type="file" name="file" id="file-input" style="display: none;">
+        <button type="button" class="upload-button" id="upload-btn" onclick="document.getElementById('file-input').click()">
+            Завантажити файл
+        </button>
+        <button type="button" class="analyze-button" id="analyze-btn" style="display: none;" onclick="analyzeFile()">
+            Аналізувати
+        </button>
+    </div>
+    <script>
+        document.getElementById('file-input').addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const uploadButton = document.getElementById('upload-btn');
+                const analyzeButton = document.getElementById('analyze-btn');
+                
+                uploadButton.textContent = 'Завантаження...';
+                uploadButton.disabled = true;
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('message').innerHTML = 
+                        `<div class="message success">${data}</div>`;
+                    uploadButton.style.display = 'none';
+                    analyzeButton.style.display = 'block';
+                    analyzeButton.textContent = 'Аналізувати';
+                })
+                .catch(error => {
+                    document.getElementById('message').innerHTML = 
+                        `<div class="message error">Помилка завантаження: ${error}</div>`;
+                    uploadButton.textContent = 'Завантажити файл';
+                    uploadButton.disabled = false;
+                });
+            }
+        });
+
+        function analyzeFile() {
+            const analyzeButton = document.getElementById('analyze-btn');
+            analyzeButton.textContent = 'Аналіз...';
+            analyzeButton.disabled = true;
+
+            fetch('/analyze')
+                .then(response => response.json())
+                .then(data => {
+                    displayAnalysis(data);
+                    analyzeButton.textContent = 'Аналізувати';
+                    analyzeButton.disabled = false;
+                })
+                .catch(error => {
+                    document.getElementById('message').innerHTML = 
+                        `<div class="message error">Помилка аналізу: ${error}</div>`;
+                    analyzeButton.textContent = 'Аналізувати';
+                    analyzeButton.disabled = false;
+                });
+        }
+
+        function displayAnalysis(data) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `
+                <div class="message success">
+                    <h3>Результати аналізу:</h3>
+                    <p>Кількість книг: ${data.totalBooks}</p>
+                    <p>Середня оцінка: ${data.averageRating}</p>
+                    <p>Найкращі книги:</p>
+                    <ul>
+                        ${data.topBooks.map(book => `<li>${book.title} - ${book.rating}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
