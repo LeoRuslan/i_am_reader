@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I am Reader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h1>I am Reader</h1>
+
+        <input type="file" id="fileInput" hidden>
+
+        <button id="uploadButton" class="btn btn-primary">Завантажити файл</button>
+
+        <div id="statusMessage" class="status"></div>
+
+        <button id="analyzeButton" class="btn btn-secondary" style="display: none;">Аналізувати</button>
+
+        <div id="analysisResult" class="result-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
