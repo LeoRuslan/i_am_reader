@@ -11,15 +11,18 @@
     <div class="container">
         <h1>I am Reader</h1>
 
-        <input type="file" id="fileInput" hidden>
-
-        <button id="uploadButton" class="btn btn-primary">Завантажити файл</button>
+        <div id="uploadContainer" class="file-upload-container">
+            <input type="file" id="fileInput" class="file-input">
+            <label for="fileInput" class="btn btn-primary">
+                <span>Завантажити файл</span>
+            </label>
+        </div>
 
         <div id="statusMessage" class="status"></div>
 
         <button id="analyzeButton" class="btn btn-secondary" style="display: none;">Аналізувати</button>
 
-        <div id="analysisResult" class="result-container"></div>
+        <div id="analysisResult" class="result-container hidden"></div>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

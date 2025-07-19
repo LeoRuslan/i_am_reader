@@ -47,11 +47,69 @@ h1 {
     background-color: #218838;
 }
 
+/* Стилі для завантаження файлу */
+.file-upload-container {
+    margin: 20px 0;
+    text-align: left;
+}
+
+.file-input {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.file-input + label {
+    display: inline-block;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.file-name {
+    display: block;
+    margin-top: 10px;
+    color: #666;
+    font-style: italic;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
 
 .status {
-    margin-top: 20px;
-    font-size: 18px;
-    color: #28a745;
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    text-align: center;
+    max-width: 400px;
+    display: block !important; /* Перевизначаємо display */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    visibility: hidden;
+}
+
+.status.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.status.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+#analyzeButton {
+    display: none;
+    margin: 0 auto;
 }
 
 .result-container {
