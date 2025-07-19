@@ -1,5 +1,8 @@
 import os
+import hashlib
+import json
 import pandas as pd
+import plotly.express as px
 from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify, render_template
 
@@ -32,9 +35,22 @@ def upload_file():
         return jsonify({'success': False, 'message': 'Файл не вибрано'}), 400
 
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+        # Зчитуємо вміст файлу
+        file_content = file.read()
+        # Створюємо хеш SHA-256 з вмісту файлу
+        file_hash = hashlib.sha256(file_content).hexdigest()[:16]  # Беремо перші 16 символів хешу
+        
+        # Отримуємо розширення файлу
+        file_ext = os.path.splitext(file.filename)[1]
+        # Створюємо нове ім'я файлу: оригінальне_ім'я_хеш.розширення
+        safe_name = secure_filename(file.filename)
+        filename = f"{os.path.splitext(safe_name)[0]}_{file_hash}{file_ext}"
+        
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        
+        # Зберігаємо файл
+        with open(filepath, 'wb') as f:
+            f.write(file_content)
         
         response = {
             'success': True,
@@ -46,7 +62,7 @@ def upload_file():
     return jsonify({'success': False, 'message': 'Дозволено лише файли формату .csv'}), 400
 
 @app.route('/analyze', methods=['POST'])
-def analyze_file():
+def analyze_file(start_year: int = 2018):
     data = request.get_json()
     filename = data.get('filename')
 
@@ -66,17 +82,54 @@ def analyze_file():
         if 'Date Read' not in df.columns:
             return jsonify({'success': False, 'message': 'У файлі відсутня колонка "Date Read"'}), 400
 
-        # Видаляємо книги без дати прочитання та конвертуємо колонку в datetime
-        df.dropna(subset=['Date Read'], inplace=True)
-        df['Date Read'] = pd.to_datetime(df['Date Read'], errors='coerce')
-        df.dropna(subset=['Date Read'], inplace=True)
+        # convert Date Read to datetime and add new columns
+        df['Date Read'] = pd.to_datetime(df['Date Read'])
+        df['year_read'] = df['Date Read'].dt.year
+        df['month_read'] = df['Date Read'].dt.month
+        df['finished_week_day'] = df['Date Read'].dt.dayofweek
+        df['finished_week_day_name'] = df['Date Read'].dt.day_name()
 
-        # Рахуємо книги за роками
-        df['Year Read'] = df['Date Read'].dt.year
-        books_per_year = df['Year Read'].value_counts().sort_index().to_dict()
+        df_read = df[df['Exclusive Shelf'] == 'read']
+        df_read.loc[:, 'Date Read'] = df_read.loc[:, 'Date Read'].fillna(df_read['Date Added'])
 
+        df_read = df_read[df_read['year_read'] >= start_year]
+        
+        books_per_year = df_read['year_read'].value_counts().sort_index()
+
+        # Переконуємось, що всі роки відображаються як категорії
+        years = books_per_year.index.astype(int).astype(str).tolist()
+        values = books_per_year.values.tolist()
+        
+        # Створюємо графік з підписами
+        graph_data = {
+            'data': [{
+                'x': years,
+                'y': values,
+                'type': 'bar',
+                'text': values,  # Показує значення над стовпцями
+                'textposition': 'auto',  # Автоматичне розташування тексту
+                'texttemplate': '%{y}',  # Формат тексту (показуємо тільки значення Y)
+                'hoverinfo': 'x+text',   # Показуємо рік і кількість при наведенні
+            }],
+            'layout': {
+                'title': 'Кількість прочитаних книг за роками',
+                'xaxis': {
+                    'title': 'Рік',
+                    'type': 'category',  # Це змушує відображати всі роки
+                    'tickmode': 'array',
+                    'tickvals': years,   # Всі роки як мітки
+                    'ticktext': years    # Відображаємо всі роки
+                },
+                'yaxis': {
+                    'title': 'Кількість книг',
+                    'rangemode': 'tozero'  # Починаємо вісь Y з 0
+                },
+                'showlegend': False  # Приховуємо легенду, вона нам не потрібна
+            }
+        }
+        
         analysis = {
-            'Книг прочитано за роками': books_per_year
+            'graph': json.dumps(graph_data)
         }
         
         return jsonify({'success': True, 'analysis': analysis})

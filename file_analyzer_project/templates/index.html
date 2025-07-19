@@ -22,9 +22,15 @@
 
         <button id="analyzeButton" class="btn btn-secondary" style="display: none;">Аналізувати</button>
 
-        <div id="analysisResult" class="result-container hidden"></div>
+        <div id="analysis-results" class="hidden">
+            <h2>Результати аналізу</h2>
+            <div id="plot"></div> <!-- Сюди буде рендеритись графік -->
+        </div>
+
+
     </div>
 
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
