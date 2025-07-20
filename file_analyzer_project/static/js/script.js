@@ -3,8 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusMessage = document.getElementById('statusMessage');
     const analyzeButton = document.getElementById('analyzeButton');
     const analysisResults = document.getElementById('analysis-results');
-    const plotDiv = document.getElementById('plot');
+    const yearPlotDiv = document.getElementById('year-plot');
+    const monthPlotDiv = document.getElementById('month-plot');
+    const weekdayPlotDiv = document.getElementById('weekday-plot');
     const uploadContainer = document.getElementById('uploadContainer');
+    const plotsContainer = document.querySelector('.plots-container');
 
     let uploadedFilename = '';
 
@@ -62,21 +65,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                // Ховаємо кнопку та повідомлення
+                // Ховаємо кнопку та прибираємо клас 'show' з повідомлення
                 analyzeButton.style.display = 'none';
-                statusMessage.style.display = 'none';
+                statusMessage.classList.remove('show');
 
                 const analysis = data.analysis;
 
-                // Якщо є дані для графіка, відображаємо його
-                if (analysis.graph) {
-                    const graphData = JSON.parse(analysis.graph);
-                    // Відображаємо графік
-                    Plotly.newPlot('plot', graphData.data, graphData.layout);
-                    
-                    // Показуємо контейнер з результатами
-                    analysisResults.classList.remove('hidden');
+                // Відображаємо графік за роками
+                if (analysis.year_graph) {
+                    const yearGraphData = JSON.parse(analysis.year_graph);
+                    Plotly.newPlot('year-plot', yearGraphData.data, yearGraphData.layout);
                 }
+                
+                // Відображаємо графік за місяцями
+                if (analysis.month_graph) {
+                    const monthGraphData = JSON.parse(analysis.month_graph);
+                    Plotly.newPlot('month-plot', monthGraphData.data, monthGraphData.layout);
+                }
+                
+                // Відображаємо графік кількості книг за днями тижня
+                if (analysis.weekday_graph) {
+                    const weekdayGraphData = JSON.parse(analysis.weekday_graph);
+                    Plotly.newPlot('weekday-plot', weekdayGraphData.data, weekdayGraphData.layout);
+                }
+                
+                // Відображаємо графік середніх оцінок та кількості сторінок
+                if (analysis.ratings_pages_graph) {
+                    const ratingsPagesGraphData = JSON.parse(analysis.ratings_pages_graph);
+                    Plotly.newPlot('ratings-pages-plot', ratingsPagesGraphData.data, ratingsPagesGraphData.layout);
+                }
+                
+                // Показуємо контейнер з результатами
+                analysisResults.classList.remove('hidden');
+                plotsContainer.style.display = 'flex';
             } else {
                 alert(`Помилка аналізу: ${data.message}`);
             }

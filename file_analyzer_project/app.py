@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify, render_template
+from visualizations import plot_books_per_year, plot_books_per_month, plot_books_by_weekday, plot_ratings_and_pages
 
 app = Flask(__name__)
 
@@ -92,44 +93,17 @@ def analyze_file(start_year: int = 2018):
         df_read = df[df['Exclusive Shelf'] == 'read']
         df_read.loc[:, 'Date Read'] = df_read.loc[:, 'Date Read'].fillna(df_read['Date Added'])
 
-        df_read = df_read[df_read['year_read'] >= start_year]
-        
-        books_per_year = df_read['year_read'].value_counts().sort_index()
-
-        # Переконуємось, що всі роки відображаються як категорії
-        years = books_per_year.index.astype(int).astype(str).tolist()
-        values = books_per_year.values.tolist()
-        
-        # Створюємо графік з підписами
-        graph_data = {
-            'data': [{
-                'x': years,
-                'y': values,
-                'type': 'bar',
-                'text': values,  # Показує значення над стовпцями
-                'textposition': 'auto',  # Автоматичне розташування тексту
-                'texttemplate': '%{y}',  # Формат тексту (показуємо тільки значення Y)
-                'hoverinfo': 'x+text',   # Показуємо рік і кількість при наведенні
-            }],
-            'layout': {
-                'title': 'Кількість прочитаних книг за роками',
-                'xaxis': {
-                    'title': 'Рік',
-                    'type': 'category',  # Це змушує відображати всі роки
-                    'tickmode': 'array',
-                    'tickvals': years,   # Всі роки як мітки
-                    'ticktext': years    # Відображаємо всі роки
-                },
-                'yaxis': {
-                    'title': 'Кількість книг',
-                    'rangemode': 'tozero'  # Починаємо вісь Y з 0
-                },
-                'showlegend': False  # Приховуємо легенду, вона нам не потрібна
-            }
-        }
+        # Отримуємо дані для графіків
+        year_graph_data = plot_books_per_year(df_read, **{'start_year': start_year})
+        month_graph_data = plot_books_per_month(df_read, **{'start_year': start_year})
+        weekday_graph_data = plot_books_by_weekday(df_read, **{'start_year': start_year})
+        ratings_pages_graph_data = plot_ratings_and_pages(df_read, **{'start_year': start_year})
         
         analysis = {
-            'graph': json.dumps(graph_data)
+            'year_graph': json.dumps(year_graph_data),
+            'month_graph': json.dumps(month_graph_data),
+            'weekday_graph': json.dumps(weekday_graph_data),
+            'ratings_pages_graph': json.dumps(ratings_pages_graph_data),
         }
         
         return jsonify({'success': True, 'analysis': analysis})
