@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const weekdayPlotDiv = document.getElementById('weekday-plot');
     const uploadContainer = document.getElementById('uploadContainer');
     const plotsContainer = document.querySelector('.plots-container');
+    const downloadContainer = document.getElementById('download-container');
+    const downloadBtn = document.getElementById('download-btn');
 
     let uploadedFilename = '';
 
@@ -15,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = fileInput.files[0];
         if (!file) return;
         
-        // Логуємо у консоль для налагодження
         console.log('Початок завантаження файлу...');
         
         const formData = new FormData();
@@ -51,6 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     analyzeButton.addEventListener('click', async () => {
+        // Hide download button at the start of a new analysis
+        if (downloadContainer) {
+            downloadContainer.style.display = 'none';
+        }
         if (!uploadedFilename) return;
 
         try {
@@ -104,6 +109,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Помилка аналізу:', error);
             alert('Сталася помилка під час аналізу файлу.');
+        } finally {
+            // Show the download button if plots are visible
+            if (plotsContainer.innerHTML.trim() !== '') {
+                downloadContainer.style.display = 'block'; // Show container after analysis
+            }
+        }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        if (plotsContainer) {
+            html2canvas(plotsContainer, {
+                scale: 3, // Increase scale for better quality
+                backgroundColor: '#ffffff' // Set a white background
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'analysis_results.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
         }
     });
 });
