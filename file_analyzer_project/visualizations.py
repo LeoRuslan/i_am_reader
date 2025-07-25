@@ -39,6 +39,7 @@ def plot_books_per_year(df_read, **kwargs):
             'textposition': 'auto',
             'texttemplate': '%{y}',
             'hoverinfo': 'x+text',
+            'marker': {'color': 'rgb(59, 117, 175)'}
         }],
         'layout': {
             'title': 'Кількість прочитаних книг за роками',
@@ -258,20 +259,28 @@ def plot_ratings_and_pages(df_read, **kwargs):
         'data': [
             {
                 'x': years,
-                'y': ratings,
-                'name': 'Середня оцінка',
-                'type': 'scatter',
-                'mode': 'lines+markers',
-                'line': {'color': 'rgb(55, 83, 109)'}
+                'y': pages,
+                'name': '',
+                'type': 'bar',
+                'yaxis': 'y2',
+                'marker': {
+                    'color': 'rgb(55, 83, 109)',
+                    'opacity': 0.7
+                },
+                'text': pages,
+                'textposition': 'auto',
+                'hovertemplate': '<b>Середня к-сть сторінок:</b> %{y}<extra></extra>'
             },
             {
                 'x': years,
-                'y': pages,
-                'name': 'Середня кількість сторінок',
+                'y': ratings,
+                'name': '',
                 'type': 'scatter',
-                'mode': 'lines+markers',
-                'yaxis': 'y2',
-                'line': {'color': 'rgb(255, 133, 27)'}
+                'mode': 'lines+markers+text',
+                'line': {'color': 'rgb(59, 117, 175)'},
+                'text': [f'{r:.2f}' for r in ratings],
+                'textposition': 'top center',
+                'hovertemplate': '<b>Середня оцінка:</b> %{y:.2f}<extra></extra>'
             }
         ],
         'layout': {
@@ -288,7 +297,8 @@ def plot_ratings_and_pages(df_read, **kwargs):
                 'rangemode': 'tozero',
                 'side': 'left',
                 'showgrid': True,
-                'range': [max(0, min(ratings) * 0.8) if ratings else 0, max(ratings) * 1.2]  # Починаємо з 80% від мінімального значення
+                # 'range': [max(0, min(ratings) * 0.8) if ratings else 0, max(ratings) * 1.2],  # Починаємо з 80% від мінімального значення
+                'range': [0, max(ratings) * 1.2],  # Починаємо з 80% від мінімального значення
             },
             'yaxis2': {
                 'title': 'Середня кількість сторінок',
@@ -297,16 +307,12 @@ def plot_ratings_and_pages(df_read, **kwargs):
                 'overlaying': 'y',
                 'showgrid': False,
                 'tickfont': {'color': 'rgb(255, 133, 27)'},
-                'range': [max(0, min(pages) * 0.8) if pages else 0, int(max(pages) * 1.2)]  # Починаємо з 80% від мінімального значення
+                'range': [0, int(max(pages) * 1.2)]  # Починаємо з 80% від мінімального значення
             },
             'plot_bgcolor': 'rgba(0,0,0,0)',
             'paper_bgcolor': 'rgba(0,0,0,0)',
-            'legend': {
-                'orientation': 'h',
-                'y': 1.1,
-                'x': 0.5,
-                'xanchor': 'center'
-            }
+            'showlegend': False,
+            'hovermode': 'x unified'
         }
     }
     
