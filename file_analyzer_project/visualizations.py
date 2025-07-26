@@ -97,14 +97,10 @@ def plot_books_per_month(df_read, **kwargs):
     # Конвертуємо значення у Python int
     values = [int(v) for v in books_per_month.values.tolist()]
     
-    # Створюємо заголовок з посиланням на рік, якщо він вказаний
+    # Заголовок графіка
     title = 'Кількість прочитаних книг за місяцями'
-    if start_year is not None:
-        current_year = pd.Timestamp.now().year
-        if start_year == current_year:
-            title += f' у {start_year} році'
-        else:
-            title += f' починаючи з {start_year} року'
+    if start_year is not None and start_year == pd.Timestamp.now().year:
+        title += f' у {start_year} році'
     
     graph_data = {
         'data': [{
@@ -174,14 +170,10 @@ def plot_books_by_weekday(df_read, **kwargs):
     days = [day_names[i] for i in books_per_day.index]
     values = [int(v) for v in books_per_day.values.tolist()]
     
-    # Створюємо заголовок з посиланням на рік, якщо він вказаний
+    # Заголовок графіка
     title = 'Кількість прочитаних книг за днями тижня'
-    if start_year is not None:
-        current_year = pd.Timestamp.now().year
-        if start_year == current_year:
-            title += f' у {start_year} році'
-        else:
-            title += f' починаючи з {start_year} року'
+    if start_year is not None and start_year == pd.Timestamp.now().year:
+        title += f' у {start_year} році'
     
     graph_data = {
         'data': [{
@@ -246,14 +238,10 @@ def plot_ratings_and_pages(df_read, **kwargs):
     ratings = [float(v) for v in ratings_by_year.values.tolist()]
     pages = [int(v) for v in pages_by_year.values.tolist()]
     
-    # Створюємо заголовок з посиланням на рік, якщо він вказаний
-    title = 'Середні оцінки та кількість сторінок книг'
-    if start_year is not None:
-        current_year = pd.Timestamp.now().year
-        if start_year == current_year:
-            title += f' у {start_year} році'
-        else:
-            title += f' починаючи з {start_year} року'
+    # Заголовок графіка
+    title = 'Середні оцінки та кількість сторінок за роками'
+    if start_year is not None and start_year == pd.Timestamp.now().year:
+        title += f' у {start_year} році'
     
     graph_data = {
         'data': [
@@ -316,4 +304,110 @@ def plot_ratings_and_pages(df_read, **kwargs):
         }
     }
     
+    return graph_data
+
+
+def plot_min_max_pages_per_year(df_read, **kwargs):
+    """
+    Створює дані для графіка з мінімальною та максимальною кількістю сторінок за роками.
+
+    Parameters:
+        df_read (pd.DataFrame): DataFrame з даними про прочитані книги.
+        **kwargs: Додаткові параметри для налаштування графіка.
+            start_year (int, optional): Рік, з якого починати аналіз. 
+                                     За замовчуванням 2018. Якщо None, аналізує всі доступні роки.
+
+    Returns:
+        dict: Словник з даними для графіка Plotly.
+    """
+    start_year = kwargs.get('start_year', 2018)
+
+    if start_year is not None:
+        df_filtered = df_read[df_read['year_read'] >= start_year].copy()
+    else:
+        df_filtered = df_read.copy()
+
+    # Перевіряємо, яка з колонок містить кількість сторінок
+    page_columns = ['Number of Pages', 'num_pages', 'Pages']
+    page_column = next((col for col in page_columns if col in df_filtered.columns), None)
+    
+    if page_column is None:
+        # Якщо жодна з колонок не знайдена, повертаємо пустий графік
+        return {
+            'data': [],
+            'layout': {
+                'title': 'Дані про кількість сторінок відсутні',
+                'plot_bgcolor': 'rgba(0,0,0,0)',
+                'paper_bgcolor': 'rgba(0,0,0,0)'
+            }
+        }
+    
+    df_filtered['num_pages'] = pd.to_numeric(df_filtered[page_column], errors='coerce')
+    df_filtered.dropna(subset=['num_pages'], inplace=True)
+    df_filtered['num_pages'] = df_filtered['num_pages'].astype(int)
+    df_filtered['year_read'] = df_filtered['year_read'].astype(int)  # Ensure years are integers
+
+    pages_stats = df_filtered.groupby('year_read')['num_pages'].agg(['min', 'max']).sort_index()
+
+    years = pages_stats.index.tolist()  # Already integers
+    min_pages = pages_stats['min'].tolist()
+    max_pages = pages_stats['max'].tolist()
+
+    title = 'Мін. та макс. кількість сторінок за роками'
+    if start_year is not None and start_year == pd.Timestamp.now().year:
+        title += f' у {start_year} році'
+
+    graph_data = {
+        'data': [
+            {
+                'x': years,
+                'y': min_pages,
+                'name': 'Мін. к-сть сторінок',
+                'type': 'bar',
+                'marker': {'color': 'rgb(255, 133, 27)'},
+                'text': [f'{p}' for p in min_pages],
+                'textposition': 'outside',
+                'textfont': {'size': 10},
+                'hovertemplate': 'Мін. к-сть сторінок: %{y}<extra></extra>',
+            },
+            {
+                'x': years,
+                'y': max_pages,
+                'name': 'Макс. к-сть сторінок',
+                'type': 'bar',
+                'marker': {'color': 'rgb(59, 117, 175)'},
+                'text': [f'{p}' for p in max_pages],
+                'textposition': 'outside',
+                'textfont': {'size': 10},
+                'hovertemplate': 'Макс. к-сть сторінок: %{y}<extra></extra>',
+            }
+        ],
+        'layout': {
+            'title': title,
+            'xaxis': {
+                'title': 'Рік',
+                'tickmode': 'array',
+                'tickvals': years,
+                'ticktext': [str(int(year)) for year in years],  # Ensure years are displayed as integers
+                'type': 'category',
+            },
+            'yaxis': {
+                'title': 'Кількість сторінок',
+                'rangemode': 'tozero',
+                'title_standoff': 20
+            },
+            'barmode': 'group',
+            'plot_bgcolor': 'rgba(0,0,0,0)',
+            'paper_bgcolor': 'rgba(0,0,0,0)',
+            'showlegend': False,
+            'hovermode': 'x unified',
+            'hoverlabel': {
+                'align': 'left',
+                'bgcolor': 'white',
+                'bordercolor': 'lightgray',
+                'font_size': 12,
+                'namelength': -1  # Show full hover label text
+            }
+        }
+    }
     return graph_data

@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify, render_template
-from visualizations import plot_books_per_year, plot_books_per_month, plot_books_by_weekday, plot_ratings_and_pages
+from visualizations import plot_books_per_year, plot_books_per_month, plot_books_by_weekday, plot_ratings_and_pages, plot_min_max_pages_per_year
 
 app = Flask(__name__)
 
@@ -98,12 +98,14 @@ def analyze_file(start_year: int = 2018):
         month_graph_data = plot_books_per_month(df_read, **{'start_year': start_year})
         weekday_graph_data = plot_books_by_weekday(df_read, **{'start_year': start_year})
         ratings_pages_graph_data = plot_ratings_and_pages(df_read, **{'start_year': start_year})
+        min_max_pages_graph_data = plot_min_max_pages_per_year(df_read, **{'start_year': start_year})
         
         analysis = {
             'year_graph': json.dumps(year_graph_data),
             'month_graph': json.dumps(month_graph_data),
             'weekday_graph': json.dumps(weekday_graph_data),
             'ratings_pages_graph': json.dumps(ratings_pages_graph_data),
+            'min_max_pages_graph': json.dumps(min_max_pages_graph_data)
         }
         
         return jsonify({'success': True, 'analysis': analysis})

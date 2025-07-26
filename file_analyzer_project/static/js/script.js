@@ -100,6 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     Plotly.newPlot('ratings-pages-plot', ratingsPagesGraphData.data, ratingsPagesGraphData.layout);
                 }
                 
+                // Відображаємо графік мін/макс кількості сторінок
+                if (analysis.min_max_pages_graph) {
+                    const minMaxPagesGraphData = JSON.parse(analysis.min_max_pages_graph);
+                    Plotly.newPlot('min-max-pages-plot', minMaxPagesGraphData.data, minMaxPagesGraphData.layout);
+                }
+                
                 // Показуємо контейнер з результатами
                 analysisResults.classList.remove('hidden');
                 plotsContainer.style.display = 'flex';
